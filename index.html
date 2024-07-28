@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Construction Law Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@300;400;600&display=swap");
+      body {
+        font-family: "Open Sans", sans-serif;
+      }
+      h1,
+      h2 {
+        font-family: "Merriweather", serif;
+      }
+      .markdown-body h1 {
+        font-size: 2em;
+        margin-top: 1em;
+        margin-bottom: 0.5em;
+      }
+      .markdown-body h2 {
+        font-size: 1.5em;
+        margin-top: 1em;
+        margin-bottom: 0.5em;
+      }
+      .markdown-body h3 {
+        font-size: 1.25em;
+        margin-top: 1em;
+        margin-bottom: 0.5em;
+      }
+      .markdown-body p {
+        margin-bottom: 1em;
+      }
+      .markdown-body ul,
+      .markdown-body ol {
+        margin-bottom: 1em;
+        padding-left: 2em;
+      }
+      .markdown-body li {
+        margin-bottom: 0.5em;
+      }
+      .markdown-body blockquote {
+        border-left: 4px solid #ddd;
+        padding-left: 1em;
+        margin-bottom: 1em;
+      }
+      .markdown-body pre {
+        background-color: #f6f8fa;
+        padding: 1em;
+        margin-bottom: 1em;
+        overflow-x: auto;
+      }
+      .markdown-body code {
+        background-color: #f6f8fa;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .spinner {
+        animation: spin 1s linear infinite;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+      <h1 class="text-4xl font-bold text-center mb-8 text-gray-800">
+        Construction Law Agent
+      </h1>
+      <div id="apiKeySection" class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-700">Enter API Key</h2>
+        <input
+          type="password"
+          id="apiKeyInput"
+          class="w-full p-2 border border-gray-300 rounded mb-4"
+          placeholder="Enter your API key"
+        />
+        <button
+          id="submitApiKey"
+          class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition duration-300"
+        >
+          Submit
+        </button>
+      </div>
+      <div id="mainContent" class="hidden">
+        <!-- Rest of your content goes here -->
+        <div class="grid grid-cols-1 gap-8">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">
+              Input Information
+            </h2>
+            <input
+              type="file"
+              id="fileInput"
+              accept="*"
+              multiple
+              class="mb-4 w-full p-2 border border-gray-300 rounded"
+            />
+            <textarea
+              id="userInput"
+              rows="4"
+              class="w-full p-2 border border-gray-300 rounded mb-4"
+              placeholder="Provide additional information here..."
+            ></textarea>
+            <button
+              id="submitButton"
+              class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition duration-300"
+            >
+              Submit
+            </button>
+        </div>
+        <div
+          id="loadingSection"
+          class="bg-white rounded-lg shadow-md p-6 hidden"
+        >
+          <div class="flex items-center justify-center">
+            <svg
+              class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            <span id="loadingStatus" class="text-lg font-semibold text-gray-700"
+              >Processing your request...</span
+            >
+          </div>
+        </div>
+        <div
+          id="finalReportSection"
+          class="bg-white rounded-lg shadow-md p-6 hidden"
+        >
+          <h2 class="text-2xl font-semibold mb-4 text-gray-700">
+            Final Report
+          </h2>
+          <div id="reportDate" class="text-sm text-gray-500 mb-2"></div>
+          <div
+            id="output"
+            class="markdown-body h-[80vh] p-4 bg-gray-50 rounded border border-gray-200 prose prose-sm max-w-none overflow-y-auto"
+          ></div>
+        </div>
+      </div>
+      <div
+        id="chatSection"
+        class="mt-8 bg-white rounded-lg shadow-md p-6 hidden"
+      >
+        <h2 class="text-2xl font-semibold mb-4 text-gray-700">
+          Follow-up Session
+        </h2>
+        <div id="chatHistory" class="mb-4 max-h-64 overflow-y-auto"></div>
+        <div class="flex">
+          <input
+            type="text"
+            id="chatInput"
+            class="flex-grow p-2 border border-gray-300 rounded-l"
+            placeholder="Ask a follow-up question..."
+          />
+          <button
+            id="sendChatButton"
+            class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-r hover:bg-blue-700 transition duration-300"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import { GoogleGenerativeAI } from "@google/generative-ai";
+
+      let genAI;
+      let model;
+      let chatSession;
+
+      document.getElementById("submitApiKey").addEventListener("click", () => {
+        const apiKey = document.getElementById("apiKeyInput").value.trim();
+        if (apiKey) {
+          genAI = new GoogleGenerativeAI(apiKey);
+          model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+          document.getElementById("apiKeySection").classList.add("hidden");
+          document.getElementById("mainContent").classList.remove("hidden");
+        } else {
+          alert("Please enter a valid API key");
+        }
+      });
+
+      const systemInstruction = `You are a prestigious law firm agent located in Japan, called Japan Construction Consultants Company or JCCC. Please read through the construction plans and related material and thoroughly investigate if anything should be aware of, and generate a comprehensive detailed and professional report. There might be some follow-up questions that you will be happy to help along with according to your professional and well-provided information. Please consider the following as the standard rule for building regulations. Please also do not include any unprofessional or guessing response, everything should be based on rules, codes, laws and regulations. You can also ask the user to provide more critical information if necessary.`;
+
+      async function fileToGenerativePart(file) {
+        const base64EncodedDataPromise = new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(",")[1]);
+          reader.readAsDataURL(file);
+        });
+
+        return {
+          inlineData: {
+            data: await base64EncodedDataPromise,
+            mimeType: file.type,
+          },
+        };
+      }
+
+      async function startChat() {
+        const lawRegulationReference = await fetch(
+          "./building standards act.txt"
+        ).then((response) => response.text());
+
+        chatSession = model.startChat({
+          history: [
+            {
+              role: "user",
+              parts: [{ text: systemInstruction }],
+            },
+            {
+              role: "model",
+              parts: [
+                {
+                  text: "Understood. I'm ready to assist with construction law inquiries in Japan. How may I help you today?",
+                },
+              ],
+            },
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `Here's the law and regulation reference to consider:\n\n${lawRegulationReference}`,
+                },
+              ],
+            },
+            {
+              role: "model",
+              parts: [
+                {
+                  text: "Thank you for providing the law and regulation reference. I'll make sure to consider this information when analyzing construction plans and answering inquiries. How can I assist you further?",
+                },
+              ],
+            },
+          ],
+        });
+      }
+
+      function appendToChatHistory(role, content) {
+        const chatHistory = document.getElementById("chatHistory");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `mb-2 ${
+          role === "user" ? "text-right" : "text-left"
+        }`;
+        messageDiv.innerHTML = `<span class="inline-block bg-${
+          role === "user" ? "blue" : "gray"
+        }-100 rounded px-2 py-1">${content}</span>`;
+        chatHistory.appendChild(messageDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+      }
+
+      function updateLoadingStatus(message) {
+        const loadingStatus = document.getElementById("loadingStatus");
+        loadingStatus.textContent = message;
+      }
+
+      document
+        .getElementById("submitButton")
+        .addEventListener("click", async () => {
+          const outputEl = document.getElementById("output");
+          const finalReportSection =
+            document.getElementById("finalReportSection");
+          const loadingSection = document.getElementById("loadingSection");
+          const reportDateEl = document.getElementById("reportDate");
+
+          finalReportSection.classList.add("hidden");
+          loadingSection.classList.remove("hidden");
+          updateLoadingStatus("Processing your request...");
+
+          const fileInputEl = document.getElementById("fileInput");
+          const userInputEl = document.getElementById("userInput");
+
+          // Reset and hide the chat section
+          document.getElementById("chatSection").classList.add("hidden");
+          document.getElementById("chatHistory").innerHTML = "";
+
+          if (fileInputEl.files.length === 0) {
+            loadingSection.classList.add("hidden");
+            finalReportSection.classList.remove("hidden");
+            outputEl.innerHTML =
+              '<p class="text-red-500">Please provide your construction plan or related materials.</p>';
+            return;
+          }
+
+          try {
+            updateLoadingStatus("Analyzing construction plans...");
+            const imageParts = await Promise.all(
+              [...fileInputEl.files].map(fileToGenerativePart)
+            );
+            const userInput = userInputEl.value.trim();
+            const currentDate = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+            const prompt = `Date of query: ${currentDate}\n\n${
+              userInput ? userInput + "\n\n" : ""
+            }Please analyze the construction plan or related materials and create the report.`;
+
+            updateLoadingStatus("Generating report...");
+            await startChat();
+            const result = await chatSession.sendMessageStream([
+              prompt,
+              ...imageParts,
+            ]);
+
+            outputEl.innerHTML = "";
+            let fullResponse = "";
+            let isFirstChunk = true;
+
+            for await (const chunk of result.stream) {
+              if (isFirstChunk) {
+                loadingSection.classList.add("hidden");
+                finalReportSection.classList.remove("hidden");
+                reportDateEl.textContent = `Report Date: ${currentDate}`;
+                isFirstChunk = false;
+              }
+
+              const chunkText = chunk.text();
+              fullResponse += chunkText;
+              outputEl.innerHTML = marked.parse(fullResponse);
+            }
+
+            document.getElementById("chatSection").classList.remove("hidden");
+          } catch (error) {
+            console.error("Error:", error);
+            loadingSection.classList.add("hidden");
+            finalReportSection.classList.remove("hidden");
+            outputEl.innerHTML =
+              '<p class="text-red-500">An error occurred while processing the files. Please try again.</p>';
+          }
+        });
+
+      document
+        .getElementById("sendChatButton")
+        .addEventListener("click", async () => {
+          const chatInput = document.getElementById("chatInput");
+          const sendChatButton = document.getElementById("sendChatButton");
+          const userMessage = chatInput.value.trim();
+
+          if (userMessage) {
+            appendToChatHistory("user", userMessage);
+            chatInput.value = "";
+            sendChatButton.disabled = true;
+            sendChatButton.classList.add("opacity-50", "cursor-not-allowed");
+
+            // Add placeholder for agent's response
+            const agentResponseDiv = document.createElement("div");
+            agentResponseDiv.className = "mb-2 text-left";
+            agentResponseDiv.innerHTML =
+              '<span class="inline-block bg-gray-100 rounded px-2 py-1">Thinking...</span>';
+            document
+              .getElementById("chatHistory")
+              .appendChild(agentResponseDiv);
+
+            try {
+              const result = await chatSession.sendMessageStream(userMessage);
+              let fullResponse = "";
+
+              for await (const chunk of result.stream) {
+                const chunkText = chunk.text();
+                fullResponse += chunkText;
+                agentResponseDiv.innerHTML = `<span class="inline-block bg-gray-100 rounded px-2 py-1">${marked.parse(
+                  fullResponse
+                )}</span>`;
+              }
+            } catch (error) {
+              console.error("Error:", error);
+              agentResponseDiv.innerHTML =
+                '<span class="inline-block bg-gray-100 rounded px-2 py-1">An error occurred. Please try again.</span>';
+            } finally {
+              sendChatButton.disabled = false;
+              sendChatButton.classList.remove(
+                "opacity-50",
+                "cursor-not-allowed"
+              );
+            }
+          }
+        });
+    </script>
+  </body>
+</html>
